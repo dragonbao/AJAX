@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ajax data transform</title>
+	<link rel="stylesheet" type="text/css" href="./index.css">
+	<script type="text/javascript" src="./index.js"></script>
+	<script type="text/javascript" src="./jquery-3.3.1.min.js"></script>
+	<style type="text/css">
+		/**{
+			margin:0;
+			padding:0;
+
+		}*/
+		.ajax-get{
+			display: inline-block;
+			background: #1cc;
+			width: 50%;
+			height: 200px;
+			margin:50px 200px;
+		}
+		.getjson,.ajax{
+			background: #1cc;
+			width: 50%;
+			height: 200px;
+			margin:50px 200px;
+		}
+	</style>
+</head>
+<body>
+	<!-- ajax by xmlhttpRequest 源生的AJAX方法-->
+	<div>
+		<p class="xmlhttp">xmlhttp</p>
+	</div>
+
+<!-- ===========jquery 的$.get()方法向后台请求数据 -->
+	<div class="ajax-get"><p>get</p>
+	<dl>
+		<dt>一个序列</dt>
+			<dd>手机</dd>
+			<dd>phone</dd>
+			<dd>平板</dd>
+	</dl>
+
+
+<!-- =======jQuery的$.post()方式向后台传输数据 请求数据。===== -->
+	</div><button class="ajaxget"> ajax get</button>
+	<div class="ajax-post">
+		<dl>
+			<dt>第二个序列</dt>
+			<dd>米饭</dd>
+			<dd>水果</dd>
+			<dd>梨</dd>
+		</dl>
+	</div>
+	<button class="ajaxpost">post</button>
+
+
+
+<!--=============jQuery 的$.getJSon()方式实现跨域传输请求数据======  -->
+	<div class="getjson">
+		<dl>
+			<dt>getJSON跨域</dt>
+			<dd>跨域</dd>
+		</dl>
+	</div>
+	<button class="jsonp">jsonp</button>
+
+
+	<!-- ========使用较低层的$.ajax({})实现$.get()的功能========== -->
+	<div class="ajax">
+		ajax底层方法
+	</div>
+	<!-- ================三个按钮 第一个 实现$.get()方式请求数据======= -->
+	<button class="ajaxclick">ajaxget</button>
+
+	<!-- ===========第二个按钮 用$.ajax({})实现$.post()的功能 -->
+	<button class="ajaxpost2">ajaxpost</button>
+
+	<!-- ===========第二个按钮 用$.ajax({})实现$.getJSON()的功能 -->
+	<button class="ajaxjson">ajaxgetjson</button>
+	
+	<script type="text/javascript">
+		// 原生的XMLHTTPRequest()对象实现跨域请求数据.
+		window.onload=function(){
+			if(window.XMLHttpRequest){
+				xmlhttp = new XMLHttpRequest();
+			}
+			else{
+				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			// console.log(xmlhttp);
+			xmlhttp.onreadystatechange=function(){
+				if(xmlhttp.readyState==4&&xmlhttp.status==200){
+					console.log(xmlhttp.getAllResponseHeaders())
+					document.getElementsByClassName("xmlhttp")[0].innerHTML = xmlhttp.responseText;
+				}
+			}
+			xmlhttp.open("POST","http://localhost:80/xmlhttp.php",true);
+			// xmlhttp.setRequestHeader(header, value)
+			// var param;param = "HTMLPAGE"
+			xmlhttp.send();
+		}
+
+
+		// $.get()实现跨域请求数据，注意后台php文件需要设置cors让js文件得到访问权限header("Access-Control-Allow-Origin:*") php第一行加入此行。
+		$(function(){
+			$(".ajaxget").on("click",function(){
+				$.get("http://localhost:80/ajaxget.php?&name=people&age=90",
+				{"name":"dragon"},//当get方法url中带有参数，且和data中重名时，以data中为准；
+					function(data,status){
+						$(".ajax-get").html(data);
+					})
+			});
+		})
+
+		// $.post()实现跨域请求数据，注意后台php文件需要设置cors让js文件得到访问权限
+			$(".ajaxpost").bind("click",function(){
+				$.post("http://localhost:80/ajaxpost.php",
+				{phone:1689758478,name:"龙"},
+				function(data,status){
+					$(".ajax-post").html(data);
+				})
+				});
+
+
+		// $.getJSON()实现跨域请求数据，后台不用任何做跨域权限处理，该方法能够自主实现跨域。
+			$(function(){
+				$(".jsonp").on("click",function(){
+					var dragon="long";
+					$.getJSON("http://localhost:80/getjson.php?name=dragon&age=12&jsoncallback=?",
+						// {name:"dragon",age:12},//数据可以放在路径后面也可以放在data中，以大括号包围.
+						function(data){
+							$(".getjson").html(data.name+data.age);
+							});
+					})
+					
+			})
+		
+
+		// $.ajax模拟$.get()实现跨域请求数据，注意后台php文件需要设置cors让js文件得到访问权限
+			$(function(){
+				$(".ajaxclick").on("click",function(e){
+					$.ajax({
+						type:"GET",
+						url:"http://localhost:80/ajaxget.php",//?name="+"DRAGON"
+						data:"name='dragons'",//发送到服务器的数据，如果不是字符串，将自动转换为字符串，对象转换为$name=dragon&age=23
+						// 数组arr=[1,2]转换为&arr=1&arr=2避免这种强制转换。查看processDate选项.
+						dataType:"text",
+						success:function(data){
+							$(".ajax").html(data)
+						}
+					})
+				})
+			})
+
+
+		// $.ajax()模拟$.post()实现跨域请求数据，注意后台php文件需要设置cors让js文件得到访问权限
+			$(function(){
+				$(".ajaxpost2").click(function(){
+					$.ajax({
+						type:"POST",
+						url:"http://localhost:80/ajaxpost.php",
+						dataType:"text",
+						data: {"name":"long","phone":"15254848"},
+						success:function(data){
+							$(".ajax").html(data);
+						},
+						error:function(xml,textStatus,errorThrwo){
+							// var textStatus =textStatus;
+							console.log(textStatus);
+						}
+					})
+				})
+			})
+
+
+
+		// $.ajax()模拟$.getJSON()实现跨域请求数据，后台不用做跨域权限处理。
+			$(function(){
+				$(".ajaxjson").click(function(e){
+					$.ajax({
+						type:"GET",
+						dataType:"jsonp",//只是申明数据类型，没有其他作用.
+						data:{name:"long"},//数据可以放在url后或者是data中,以data中的为最终结果.
+						url:"http://localhost:80/ajaxjsonp.php?&name=jsonptr&age=23",
+						jsonp:"callback",//作用类是http://"localhost:80/xyz.php?callback=" 中结尾处callback的声明，可以自定义名称.
+						jsonpCallback:"back",//作用是http://"localhost:80/xyz.php?callback="back,主要用于后台返回数据，返回的结果在sunccess(data)中的data中。
+						success:function(data,status){
+							$(".ajax").html(data.name+data.age);
+							console.log(data);
+						},
+						error:function(xml,textStatus,errorThrow){
+							$(".ajax").html("some mistake happened");
+
+						}
+					})
+				})
+			})
+	</script>
+</body>
+</html>
+	
